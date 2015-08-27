@@ -1,0 +1,126 @@
+body {
+  padding: 20px 50px 80px;
+  font: 16px/1.4 "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00A;
+  text-decoration: none;
+}
+
+h2 {
+  margin-top: 50px;
+}
+h2 a {
+  margin-right: 20px;
+}
+h2 small {
+  font-weight: normal;
+  font-size: 75%;
+}
+
+tr:first-child h2 {
+  margin-top: 0;
+}
+
+table {
+  width: 100%;
+}
+
+td, th {
+  white-space: nowrap;
+  padding: .5em .8em;
+  vertical-align: top;
+  text-align: left;
+}
+td:first-child, th:first-child {
+  padding-left: 0;
+}
+td:last-child, th:last-child {
+  padding-right: 0;
+}
+
+.description {
+  white-space: normal;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  z-index: 2;
+  margin-right: -12px;
+}
+
+#svg-store {
+  position: absolute;
+  z-index: -1;
+  opacity: 0;
+}
+.labeled {
+  fill: green;
+}
+.unlabeled {
+  fill: red;
+  -webkit-transform: rotate(45deg);
+}
+
+.label {
+  font-size: 12px;
+  white-space: nowrap;
+  display: inline-block;
+  padding: .5em .8em .5em 14px;
+  color: white;
+  border-radius: .25em;
+}
+
+.avatar {
+  height: 30px;
+}
+
+.avatar, .login {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.gh-notification-details {
+  border-top: 1px solid #ccc;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+.gh-notification-details:first-child {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+
+
+
+/*  loader animation */
+.line1, .line2, .line3, .line4 {
+  margin-left: 10px;
+  position: absolute;
+  width: 60px;
+  height: 4px;
+  background-color: #ffd51d;
+  -webkit-animation: spin 1.5s infinite linear;
+  -webkit-animation-timing-function: ease;
+}
+.line2 {
+  -webkit-animation-delay: 0.1s;
+}
+.line3 {
+  -webkit-animation-delay: 0.2s;
+}
+.line4 {
+  -webkit-animation-delay: 0.3s;
+}
+@-webkit-keyframes spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
