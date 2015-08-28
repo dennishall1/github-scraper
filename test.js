@@ -1,7 +1,3 @@
-var config = require('../config');
-
-//var Firebase = require('firebase');
-//var firebase = new Firebase( config.firebaseUrl );
 
 var xhr = require('request');
 var async = require('async');
@@ -13,17 +9,16 @@ var credentials = {
     password: process.env.ghpassword
 };
 
-module.exports = function (router) {
 
     var authenticity_token = '';
     var prs = [];
 
     // NOTE: router paths are based on the location of this file
-    router.get('/', function (req, res) {
         async.series([
             // get the authenticity_token
             function(cb){
                 xhr('https://github.com/login', {jar: true}, function(err, resp, body) {
+                    //console.log('LOGIN RESPONSE', resp);
                     credentials.authenticity_token = $$(body).find('input[name="authenticity_token"]').val();
                     console.log("\n\ngithub login page\n\n".green, credentials.authenticity_token);
                     cb();
@@ -44,7 +39,7 @@ module.exports = function (router) {
                     });
                     console.log("PULL REQUESTS:", prs);
 
-                    async.parallel(prs.map(function(prUrl, prIndex){
+                    async.parallel(prs.slice(-2).map(function(prUrl, prIndex){
                         return function(_cb){
                             xhr('https://github.com' + prUrl, {jar: true}, function(err, resp, body){
                                 var $ = $$(body);
@@ -67,6 +62,7 @@ module.exports = function (router) {
                                 // how many code comments were addressed?
                                 pr.numCodeCommentsAddressed = $.find('.outdated-diff-comment-container').length;
 
+                                // labels
                                 pr.labels = [];
                                 var labels = $.find('.discussion-item-labeled, .discussion-item-unlabeled');
                                 labels.each(function(i, item){
@@ -78,15 +74,14 @@ module.exports = function (router) {
                                         action: item.is('.discussion-item-labeled') ? 'labeled' : 'unlabeled',
                                         timestamp: timeNode.attr('datetime'),
                                         name: label.text(),
-                                        fulltext: item.text(),
-                                        color: label.attr('style').replace(/.*(#\d+).*/,'$1'),
-                                        textColor: label.find('a').attr('style').replace(/.*(#\d+).*/,'$1')
+                                        backgroundColor: label.attr('style'),
+                                        textColor: label.find('a').attr('style')
                                     });
                                 });
 
                                 pr.numMerges = 0;
                                 $.find('.commit-message').each(function(i, el){
-                                    if($$(el).html().match(/merge/i)){
+                                    if($$(el).text().match(/merge/i)){
                                         pr.numMerges++;
                                     }
                                 });
@@ -100,22 +95,12 @@ module.exports = function (router) {
             },
             // render the response
             function(cb){
-                console.log(prs);
-                res.send(prs);
+                console.log(JSON.stringify(prs));
+                //res.send(prs);
                 //res.render('index', {
                 //    title: "GitHub Stats"
                 //});
                 cb();
             }
         ]);
-    });
-    
-    router.post('/', function (req, res) {
-        // tack on a property to track what time it is when we receive the notification
-        req.body.received_at = (new Date()).toISOString();
-        console.log('request body', req.body);
-        firebase.push(req.body);
-        res.send('ok');
-    });
 
-};
