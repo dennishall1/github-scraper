@@ -47,18 +47,16 @@ module.exports = function (router) {
                     async.parallel(prs.map(function(prUrl, prIndex){
                         return function(_cb){
                             xhr('https://github.com' + prUrl, {jar: true}, function(err, resp, body){
+
                                 var $ = $$(body);
+                                var headerTextNode = $.find('.timeline-comment-header-text').eq(0);
+
                                 var pr = {
                                     title: $.find('.js-issue-title').text(),
-                                    number: $.find('.gh-header-number').text().replace('#', '')
-                                };
-                                // todo: get the datapoints
-                                // ...
-                                var timeNode = $.find('.timeline-comment-header-text').find('time');
-                                pr.createdAt = {
-                                    timestamp: timeNode.attr('datetime'),
-                                    humanReadableTime: timeNode.attr('title'),
-                                    ago: timeNode.html()
+                                    number: $.find('.gh-header-number').text().replace('#', ''),
+                                    initiator: headerTextNode.find('strong').text(),
+                                    createdAt: headerTextNode.find('time').attr('datetime'),
+                                    branch: $('.current-branch').eq(1).text()
                                 };
 
                                 // how many times was this ticket passed around?
@@ -71,6 +69,7 @@ module.exports = function (router) {
                                 var labels = $.find('.discussion-item-labeled, .discussion-item-unlabeled');
                                 labels.each(function(i, item){
                                     // TODO: there could be more than one label added/removed at a time.
+                                    // TODO: `action` isn't always accurately identified
                                     item = $$(item);
                                     var label = item.find('.label-color');
                                     var timeNode = item.find('time');
@@ -109,7 +108,7 @@ module.exports = function (router) {
             }
         ]);
     });
-    
+
     router.post('/', function (req, res) {
         // tack on a property to track what time it is when we receive the notification
         req.body.received_at = (new Date()).toISOString();
