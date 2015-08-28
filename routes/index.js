@@ -9,8 +9,8 @@ var $ = require('cheerio');
 require('colors');
 
 var credentials = {
-    login: 'username',
-    password: 'password'
+    login: '',
+    password: ''
 };
 
 module.exports = function (router) {
@@ -32,19 +32,30 @@ module.exports = function (router) {
             },
             // log in
             function(cb){
-                xhr.post('https://github.com/session', { form: credentials, jar: true }, function(err, resp, body){
+                xhr.post('https://github.com/session', {form: credentials, jar: true}, function(err, resp, body){
                     console.log("\n\ngithub .. logged in \n\n".green, $(body).find('title').text());
                     cb();
                 });
             },
             // get stats...
             function(cb){
-                xhr('https://github.com/CarMax/carmax.com/pulls', {jar: true}, function(err, resp, body) {
+                xhr('https://github.com/CarMax/carmax.com/pulls?q=is%3Apr+milestone%3A"Build+Sprint+8"', {jar: true}, function(err, resp, body) {
                     $(body).find('.issue-title-link').each(function(i, el){
                         prs.push($(el).attr('href'));
                     });
-
                     console.log("PULL REQUESTS:", prs);
+
+                    async.series(prs.map(function(prUrl){
+                        return function(_cb){
+                            xhr(prUrl, {jar: true}, function(err, resp, body){
+                                var $ = $(body);
+                                // todo: get the datapoints
+                                // ...
+                                _cb();
+                            });
+                        }
+                    }));
+
                     cb()
                 });
             },
