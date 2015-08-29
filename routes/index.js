@@ -52,11 +52,11 @@ module.exports = function (router) {
                                 var headerTextNode = $.find('.timeline-comment-header-text').eq(0);
 
                                 var pr = {
-                                    title: $.find('.js-issue-title').text(),
-                                    number: $.find('.gh-header-number').text().replace('#', ''),
-                                    initiator: headerTextNode.find('strong').text(),
+                                    title: $.find('.js-issue-title').text().trim(),
+                                    number: $.find('.gh-header-number').text().trim().replace('#', ''),
+                                    initiator: headerTextNode.find('strong').text().trim(),
                                     createdAt: headerTextNode.find('time').attr('datetime'),
-                                    branch: $('.current-branch').eq(1).text()
+                                    branch: $.find('.current-branch').eq(1).text().trim()
                                 };
 
                                 // how many times was this ticket passed around?
@@ -65,30 +65,40 @@ module.exports = function (router) {
                                 // how many code comments were addressed?
                                 pr.numCodeCommentsAddressed = $.find('.outdated-diff-comment-container').length;
 
+                                // labels -- see PR 197
                                 pr.labels = [];
-                                var labels = $.find('.discussion-item-labeled, .discussion-item-unlabeled');
-                                labels.each(function(i, item){
-                                    // TODO: there could be more than one label added/removed at a time.
-                                    // TODO: `action` isn't always accurately identified
-                                    item = $$(item);
-                                    var label = item.find('.label-color');
-                                    var timeNode = item.find('time');
-                                    pr.labels.push({
-                                        action: item.is('.discussion-item-labeled') ? 'labeled' : 'unlabeled',
-                                        timestamp: timeNode.attr('datetime'),
-                                        name: label.text(),
-                                        fulltext: item.text(),
-                                        color: label.attr('style').replace(/.*(#\d+).*/,'$1'),
-                                        textColor: label.find('a').attr('style').replace(/.*(#\d+).*/,'$1')
+                                $.find('.discussion-item-labeled, .discussion-item-unlabeled').each(function(){
+                                    // ... there could be more than one label added/removed at a time.
+                                    $$(this).find('.label-color').each(function(){
+                                        var label = $$(this);
+                                        pr.labels.push({
+                                            label: label.text().trim(),
+                                            timestamp: label.find('time').attr('datetime'),
+                                            color: label.attr('style').replace(/.*(#\d+).*/,'$1'),
+                                            textColor: label.find('a').attr('style').replace(/.*(#\d+).*/,'$1')
+                                        });
                                     });
                                 });
 
+                                // number of merges
                                 pr.numMerges = 0;
                                 $.find('.commit-message').each(function(i, el){
                                     if($$(el).html().match(/merge/i)){
                                         pr.numMerges++;
                                     }
                                 });
+
+                                // is this branch merged?
+                                var mergedNode = $.find('.discussion-item-merged');
+                                if(mergedNode){
+                                    pr.mergedAt = mergedNode.find('time').attr('datetime');
+                                }
+
+                                // is this branch closed?
+                                var closedNode = $.find('.discussion-item-closed');
+                                if(closedNode){
+                                    pr.mergedAt = closedNode.find('time').attr('datetime');
+                                }
 
                                 prs[prIndex] = pr;
                                 _cb();
