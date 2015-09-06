@@ -1,157 +1,66 @@
 (function () {
 
-    // todo - read from shared config.
-    // config.js
-    var config = {
-        firebaseUrl: "https://sweltering-heat-1762.firebaseio.com/"
-    };
+    var data = null;
+    var template = null;
 
-    var firebase = new Firebase(config.firebaseUrl);
-    var renderPoint = document.getElementById('output');
+    // get the data
+    _get("/data/8", function (res) {
+        data = JSON.parse(res.responseText);
+    });
 
+    // get the template
     _get("/js/templates/stats.hbs", function (res) {
+        template = Handlebars.compile(res.responseText);
+    });
 
-        var template = Handlebars.compile(res.responseText);
+    // wait for the template and data, then render the page.
+    (function onReady(){
 
-        // get the data from firebase
-        firebase.on("value", function (snapshot) {
+        if(!template || !data){
 
-            // we have the data now, so kill the loading animation.
-            renderPoint.innerHTML = '';
+            setTimeout(onReady, 20);
 
-            // the data from firebase
-            var data = snapshot.val();
+        } else {
 
-            //console.log(data);
+            var renderPoint = document.getElementById('output');
 
-            // pull requests
-            var pullRequests = {};
-            var pullRequestsWithUnknownNumbers = {};
-
-            // group events "under" pull requests.
-            Object.keys(data).forEach(function (key) {
-                var item = data[key];
-                // we only care about pull requests
-                if (!(item.pull_request || item.commits || item.comment)) {
-                    return;
-                }
-
-                // do we know what pr number this is?
-                var prNumber = item.pull_request && item.pull_request.number ||
-                    item.issue && item.issue.number ||
-                    item.comment && item.comment.pull_request_url.split(/\//g).pop();
-
-                var hasPRNumber = prNumber || prNumber === 0;
-
-                // do we know what branch this is?
-                var branch = item.pull_request && item.pull_request.head.ref ||
-                        item.ref && item.ref.replace('refs/heads/', '');
-
-                // commits may not include a pr number reference.
-                // comments may not include a branch reference.
-
-                var pullRequestsObjRef = pullRequests;
-                if(!hasPRNumber){
-                    prNumber = branch || Math.random();
-                    // pullRequestsWithUnknownNumbers.push(prNumber);
-                    pullRequestsObjRef = pullRequestsWithUnknownNumbers;
-                    console.warn("no pr number for ", prNumber, item);
-                }
-
-                // initialize this datapoint, if not already
-                pullRequestsObjRef[prNumber] = pullRequestsObjRef[prNumber] || {
-                    number: prNumber,
-                    events: [],
-                    merges: 0,
-                    labels: {}
-                };
-
-                // get a reference to this PR
-                var pr = pullRequestsObjRef[prNumber];
-
-                // add the branch name, if we know it
-                if(branch && hasPRNumber){
-                    pr.branch = branch;
-                }
-
-                // update the number of merges
-                if (item.commits) {
-                    item.commits.forEach(function (commit) {
-                        if (commit.message.match(/merge/i)) {
-                            console.log('merge', prNumber);
-                            pr.merges++;
+            // might be nice to do this when saving the data .. but probably doesn't take long to compute.
+            data.forEach(function(pr){
+                var labelsByText = {};
+                var lastWIPRemoval = null;
+                pr.labels.forEach(function (label) {
+                    var labelEvents = labelsByText[label.text] = labelsByText[label.text] || [];
+                    labelEvents.push(label);
+                    label.action = labelEvents.length > 1 && labelEvents.length % 2 === 0 ? 'unlabeled' : 'labeled';
+                    if(label.action === 'unlabeled'){
+                        if(label.text.match(/wip/i)){
+                            lastWIPRemoval = label.timestamp;
                         }
-                    });
-                }
-                if (item.comment) {
-                    if (item.comment.body.match(/merge/i)) {
-                        console.log('merge', prNumber);
-                        pr.merges++;
+                        label.duration = timeSince(new Date(labelEvents[labelEvents.length - 2].timestamp), new Date(label.timestamp));
                     }
+                });
+                if(pr.mergedAt) {
+                    pr.timeToMerge = timeSince(new Date(lastWIPRemoval), new Date(pr.mergedAt));
                 }
-
-                // how long ago was this event?
-                item.ago = timeSince(new Date(item.received_at)) + ' ago';
-
-                // only add this event to the branch's events array if it is a label event
-                if (item.label) {
-                    pr.hasLabel = true;
-                    item.label.textColor = getContrastingColor(item.label.color);
-
-                    var prLabel = pr.labels[item.label] = pr.labels[item.label] || [];
-                    prLabel.push(item.received_at);
-
-                    // if action is 'unlabeled',
-                    // check for the most recent "labeled" action for this label and calculate the elapsed time.
-                    if (item.action === 'unlabeled') {
-                        // do we know when this label was added?
-                        // (going forward, we should always know, but in the beginning, we started tracking labels mid-sprint)
-                        if (prLabel.length > 1) {
-                            item.labelDuration = timeSince(new Date(prLabel[prLabel.length - 2]), new Date(item.received_at));
-                        }
-                    }
-
-                    pr.events.push(item);
-                }
-
+                pr.totalTime = timeSince(new Date(pr.mergedAt || pr.closedAt), new Date(pr.createdAt));
             });
-
-            // attempt to reconcile any branch-keyed PRs back to PR-Number-keyed PRs
-            // ... this was more difficult than I expected.  Maybe fun for Sr. PLD / PLA :D
-            Object.keys(pullRequestsWithUnknownNumbers).forEach(function(unknownNumber){
-                var unknownPR = pullRequestsWithUnknownNumbers[unknownNumber];
-                for(var key in pullRequests){
-                    var pr = pullRequests[key];
-                    if(pr.branch === unknownPR.number){
-                        // consolidate
-                        pr.merges += unknownPR.merges;
-                        pr.events.concat(unknownPR.events);
-                        return;
-                    }
-                }
-            });
-
-            // free up a bit of memory
-            pullRequestsWithUnknownNumbers = null;
 
             // render the template into the page, but pass in pull requests as an array instead of a dictionary
-            renderPoint.innerHTML = template({
-                pullRequests: Object.keys(pullRequests).map(function (key) {
-                    var pr = pullRequests[key];
-                    //pr.events.reverse();
-                    pr.merges = "" + pr.merges;
-                    return pr;
-                })//.reverse()
-            });
+            renderPoint.innerHTML = template({ pullRequests: data });
 
-        });
+        }
 
-    });
+    })();
 
 
     // utility functions
 
-    // ajax get
+    /**
+     * AJAX Get
+     * @param url
+     * @param callback
+     * @private
+     */
     function _get(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
@@ -161,7 +70,11 @@
         xhr.send();
     }
 
-    // eponymous
+    /**
+     * Returns either white or black, depending on how light or dark the other color is (the parameter)
+     * @param hexcolor {string}
+     * @returns {string}
+     */
     function getContrastingColor(hexcolor) {
         var r = parseInt(hexcolor.substr(0, 2), 16);
         var g = parseInt(hexcolor.substr(2, 2), 16);
@@ -170,7 +83,13 @@
         return (yiq >= 128) ? '000' : 'fff';
     }
 
-    // => "5 minutes ago"
+    /**
+     * Calculates human-readable and convenient time difference, such as "5 minutes"
+     * 'ago' or 'from now' should be added by the calling context, it is not returned here.
+     * @param from {Date}
+     * @param to {Date}
+     * @returns {string}
+     */
     function timeSince(from, to) {
         to = to || new Date();
         var seconds = Math.floor((to - from) / 1000);

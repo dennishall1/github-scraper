@@ -2,45 +2,43 @@
     <table>
         {{#each pullRequests}}
             <tr>
-                <td colspan="4">
-                    <!--<img class="avatar" src="{{pull_request.user.avatar_url}}" title="{{pull_request.user.login}}"/>-->
+                <td colspan="3">
+                    <!--<img class="avatar" src="{ {user.avatar_url}}" title="{ {user.login}}"/>-->
                     <h2>
                         <a href="https://github.com/CarMax/carmax.com/pull/{{number}}">{{branch}}</a>
-                        <small>({{merges}} merges)</small>
+                        <small>({{numMerges}} merges)</small>
                     </h2>
+                    <p>Total Time: {{totalTime}}</p>
+                    {{#if timeToMerge}}
+                        <p>Time to Merge: {{timeToMerge}}</p>
+                    {{/if}}
                 </td>
             </tr>
-            {{#if hasLabel}}
-                <!--<tr>-->
-                    <!--<th>Label</th>-->
-                    <!--<th>Updated by</th>-->
-                    <!--<th>Time</th>-->
-                    <!--<th>Description</th>-->
-                <!--</tr>-->
-                {{#each events}}
+            {{#if labels.length}}
+                {{#each labels}}
                     <tr>
                         <td>
                             <svg class="icon {{action}}">
                                 <use xlink:href="#circled-plus"></use>
                             </svg>
-                            <span class="label" style="color:#{{label.textColor}};background:#{{label.color}};">
-                                {{label.name}}
+                            <span class="label" style="color:#{{textColor}};background:#{{color}};">
+                                {{text}}
+                            </span>
+                            <span class="duration">
+                                {{duration}}
                             </span>
                         </td>
                         <td>
-                            <img class="avatar" src="{{sender.avatar_url}}"/>
-                            <div class="login">{{sender.login}}</div>
+                            <img class="avatar" src="{{user.avatar_url}}"/>
+                            <div class="login">{{user.login}}</div>
                         </td>
                         <td>
                             {{ago}}
                         </td>
-                        <td class="description">
-                            {{pull_request.title}}
-                        </td>
                     </tr>
                 {{/each}}
             {{else}}
-                <td colspan="4">
+                <td colspan="3">
                     There are no label events for this branch yet.
                 </td>
             {{/if}}

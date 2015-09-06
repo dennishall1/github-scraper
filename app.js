@@ -2,8 +2,8 @@ require('dotenv').load();
 require('colors');
 
 if(!process.env.ghusername || !process.env.ghpassword){
-        console.error('Missing environment variables:\nSet ghusername and ghpassword environment variables (or .env file)'.red);
-        return;
+    console.error('Missing environment variables:\nSet ghusername and ghpassword environment variables (or .env file)'.red);
+    return;
 }
 
 
@@ -17,6 +17,11 @@ var enrouten = require('express-enrouten');
 var serveStatic = require('serve-static');
 
 var app = express();
+
+app.set('gh_credentials', {
+    login: process.env.ghusername,
+    password: process.env.ghpassword
+});
 
 app.set('port', process.env.PORT || 3000);
 
