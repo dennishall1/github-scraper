@@ -35,14 +35,15 @@
                     if(label.action === 'unlabeled'){
                         if(label.text.match(/wip/i)){
                             lastWIPRemoval = label.timestamp;
+                        } else {
+                            label.duration = timeSince(new Date(labelEvents[labelEvents.length - 2].timestamp), new Date(label.timestamp));
                         }
-                        label.duration = timeSince(new Date(labelEvents[labelEvents.length - 2].timestamp), new Date(label.timestamp));
                     }
                 });
                 if(pr.mergedAt) {
                     pr.timeToMerge = timeSince(new Date(lastWIPRemoval), new Date(pr.mergedAt));
                 }
-                pr.totalTime = timeSince(new Date(pr.mergedAt || pr.closedAt), new Date(pr.createdAt));
+                pr.totalTime = timeSince(new Date(pr.createdAt), new Date(pr.mergedAt || pr.closedAt));
             });
 
             // render the template into the page, but pass in pull requests as an array instead of a dictionary
