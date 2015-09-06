@@ -21,7 +21,7 @@ module.exports = function (router) {
         var sprint = req.params.sprint || 8;
 
         try{
-            data = fs.readFileSync(path.join(__dirname, '../../prs.json'), 'utf8');
+            data = fs.readFileSync(path.join(__dirname, '../../prs-' + sprint + '.json'), 'utf8');
         }catch(e){}
 
         if(data){
@@ -64,14 +64,14 @@ module.exports = function (router) {
 
                                     var $ = $$(body);
                                     var headerTextNode = $.find('.timeline-comment-header-text').eq(0);
-                                    var userLink = $.find('.timeline-comment-wrapper.js-comment-container').eq(0).first();
+                                    var avatar_url = $.find('.timeline-comment-wrapper.js-comment-container img').attr('src');
 
                                     var pr = {
                                         title: $.find('.js-issue-title').text().trim(),
                                         number: $.find('.gh-header-number').text().trim().replace('#', ''),
                                         user: {
-                                            login: headerTextNode.first().text().trim(),
-                                            avatar_url: userLink.first().attr('src')
+                                            login: headerTextNode.find('strong').text().trim(),
+                                            avatar_url: avatar_url
                                         },
                                         createdAt: headerTextNode.find('time').attr('datetime'),
                                         branch: $.find('.current-branch').eq(1).text().trim()

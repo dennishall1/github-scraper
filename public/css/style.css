@@ -34,9 +34,11 @@ td, th {
   text-align: left;
 }
 td:first-child, th:first-child {
+  width: 1%;
   padding-left: 0;
 }
 td:last-child, th:last-child {
+  width: 100%;
   padding-right: 0;
 }
 

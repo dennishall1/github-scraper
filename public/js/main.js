@@ -1,10 +1,22 @@
-(function () {
+(function main () {
 
     var data = null;
     var template = null;
 
+    var sprintSelect = document.getElementById('sprint');
+    var sprint = sprintSelect.value;
+
+    console.log('sprint', sprint);
+
+    // re-render the page if the sprint selection changes.
+    sprintSelect.addEventListener('change', function(e){
+        console.log('selection changed');
+        main();
+    });
+
+
     // get the data
-    _get("/data/8", function (res) {
+    _get("/data/" + sprint, function (res) {
         data = JSON.parse(res.responseText);
     });
 
