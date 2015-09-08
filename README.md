@@ -6,8 +6,8 @@
 1. Create a file named `.env` at the project root (in the same folder as `package.json`) -- The contents of this file should be
 
     ````
-    gh_username = YOUR-GITHUB-USERNAME
-    gh_password = YOUR-GITHUB-PASSWORD
+    ghusername=YOUR-GITHUB-USERNAME
+    ghpassword=YOUR-GITHUB-PASSWORD
     ````
 1. Run `npm install`
 1. Run `node app`
