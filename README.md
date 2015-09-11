@@ -11,4 +11,4 @@
     ````
 1. Run `npm install`
 1. Run `node app`
-1. Point your browser to `http://localhost:3000/8` - where the `8` at the end indicates the Sprint # (a.k.a., Milestone)
+1. Point your browser to `http://localhost:3000/`
