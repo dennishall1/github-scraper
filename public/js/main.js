@@ -66,7 +66,7 @@
                             }
                         }
                     });
-                    if (pr.mergedAt) {
+                    if (lastWIPRemoval && pr.mergedAt) {
                         pr.timeToMerge = timeSince(new Date(lastWIPRemoval), new Date(pr.mergedAt));
                     }
                     pr.totalTime = timeSince(new Date(pr.createdAt), new Date(pr.mergedAt || pr.closedAt));
