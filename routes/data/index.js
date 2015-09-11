@@ -8,16 +8,13 @@ require('colors');
 
 module.exports = function (router) {
 
-    var authenticity_token = '';
-    var prs = [];
-
     // NOTE: router paths are based on the location of this file
     router.get('/:sprint', function (req, res) {
 
         var credentials = req.app.get('gh_credentials');
-
+        var authenticity_token = '';
+        var prs = [];
         var data = '';
-
         var sprint = req.params.sprint || 8;
 
         try{
