@@ -1,69 +1,87 @@
-(function main () {
+(function () {
 
     var data = null;
     var template = null;
+    var renderPoint = document.getElementById('output');
+    var spinnerHTML = renderPoint.innerHTML;
 
     var sprintSelect = document.getElementById('sprint');
     var sprint = sprintSelect.value;
+
+    var isShouldRefreshDataCheckbox = document.getElementById('isShouldRefreshData');
 
     console.log('sprint', sprint);
 
     // re-render the page if the sprint selection changes.
     sprintSelect.addEventListener('change', function(e){
+        renderPoint.innerHTML = spinnerHTML;
         console.log('selection changed');
+        sprint = sprintSelect.value;
         main();
     });
 
+    function main() {
 
-    // get the data
-    _get("/data/" + sprint, function (res) {
-        data = JSON.parse(res.responseText);
-    });
+        data = null;
 
-    // get the template
-    _get("/js/templates/stats.hbs", function (res) {
-        template = Handlebars.compile(res.responseText);
-    });
+        var isShouldRefreshData = isShouldRefreshDataCheckbox.checked;
 
-    // wait for the template and data, then render the page.
-    (function onReady(){
+        // get the data
+        _get("/data/" + sprint + (isShouldRefreshData ? '?refresh=true' : ''), function (res) {
+            data = JSON.parse(res.responseText);
+        });
 
-        if(!template || !data){
+        // unset this value.
+        isShouldRefreshDataCheckbox.checked = false;
 
-            setTimeout(onReady, 20);
-
-        } else {
-
-            var renderPoint = document.getElementById('output');
-
-            // might be nice to do this when saving the data .. but probably doesn't take long to compute.
-            data.forEach(function(pr){
-                var labelsByText = {};
-                var lastWIPRemoval = null;
-                pr.labels.forEach(function (label) {
-                    var labelEvents = labelsByText[label.text] = labelsByText[label.text] || [];
-                    labelEvents.push(label);
-                    label.action = labelEvents.length > 1 && labelEvents.length % 2 === 0 ? 'unlabeled' : 'labeled';
-                    if(label.action === 'unlabeled'){
-                        if(label.text.match(/wip/i)){
-                            lastWIPRemoval = label.timestamp;
-                        } else {
-                            label.duration = timeSince(new Date(labelEvents[labelEvents.length - 2].timestamp), new Date(label.timestamp));
-                        }
-                    }
-                });
-                if(pr.mergedAt) {
-                    pr.timeToMerge = timeSince(new Date(lastWIPRemoval), new Date(pr.mergedAt));
-                }
-                pr.totalTime = timeSince(new Date(pr.createdAt), new Date(pr.mergedAt || pr.closedAt));
+        // get the template
+        if(!template) {
+            _get("/js/templates/stats.hbs", function (res) {
+                template = Handlebars.compile(res.responseText);
             });
-
-            // render the template into the page, but pass in pull requests as an array instead of a dictionary
-            renderPoint.innerHTML = template({ pullRequests: data });
-
         }
 
-    })();
+        // wait for the template and data, then render the page.
+        (function onReady() {
+
+            if (!template || !data) {
+
+                setTimeout(onReady, 20);
+
+            } else {
+
+                // might be nice to do this when saving the data .. but probably doesn't take long to compute.
+                data.forEach(function (pr) {
+                    var labelsByText = {};
+                    var lastWIPRemoval = null;
+                    pr.labels.forEach(function (label) {
+                        var labelEvents = labelsByText[label.text] = labelsByText[label.text] || [];
+                        labelEvents.push(label);
+                        label.action = labelEvents.length > 1 && labelEvents.length % 2 === 0 ? 'unlabeled' : 'labeled';
+                        if (label.action === 'unlabeled') {
+                            if (label.text.match(/wip/i)) {
+                                lastWIPRemoval = label.timestamp;
+                            } else {
+                                label.duration = timeSince(new Date(labelEvents[labelEvents.length - 2].timestamp), new Date(label.timestamp));
+                            }
+                        }
+                    });
+                    if (pr.mergedAt) {
+                        pr.timeToMerge = timeSince(new Date(lastWIPRemoval), new Date(pr.mergedAt));
+                    }
+                    pr.totalTime = timeSince(new Date(pr.createdAt), new Date(pr.mergedAt || pr.closedAt));
+                });
+
+                // render the template into the page, but pass in pull requests as an array instead of a dictionary
+                renderPoint.innerHTML = template({pullRequests: data});
+
+            }
+
+        })();
+
+    }
+
+    main();
 
 
     // utility functions

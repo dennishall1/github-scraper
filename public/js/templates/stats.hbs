@@ -1,45 +1,49 @@
 <div class="gh-notification-details">
     <table>
-        {{#each pullRequests}}
-            <tr>
-                <td colspan="2">
-                    <h2>
-                        <img class="avatar" src="{{user.avatar_url}}" title="{{user.login}}"/>
-                        <a href="https://github.com/CarMax/carmax.com/pull/{{number}}">{{branch}}</a>
-                    </h2>
-                    <p>{{totalTime}} from pr opened to merged</p>
-                    <p>{{numAssignments}} people were assigned</p>
-                    <p>{{numMerges}} merges from master</p>
-                    {{#if timeToMerge}}
-                        <p>{{timeToMerge}} from WIP removal until merged</p>
-                    {{/if}}
-                </td>
-            </tr>
-            {{#if labels.length}}
-                {{#each labels}}
-                    <tr>
-                        <td>
-                            <svg class="icon {{action}}">
-                                <use xlink:href="#circled-plus"></use>
-                            </svg>
-                            <span class="label" style="color:#{{textColor}};background:#{{color}};">
-                                {{text}}
-                            </span>
-                            <span class="duration">
-                                {{duration}}
-                            </span>
-                        </td>
-                        <td>
-                            <img class="avatar" src="{{user.avatar_url}}"/>
-                            <div class="login">{{user.login}}</div>
-                        </td>
-                    </tr>
-                {{/each}}
-            {{else}}
-                <td colspan="2">
-                    There are no label events for this branch yet.
-                </td>
-            {{/if}}
-        {{/each}}
+        {{#if pullRequests}}
+            {{#each pullRequests}}
+                <tr>
+                    <td colspan="2">
+                        <h2>
+                            <img class="avatar" src="{{user.avatar_url}}" title="{{user.login}}"/>
+                            <a href="https://github.com/CarMax/carmax.com/pull/{{number}}">{{branch}}</a>
+                        </h2>
+                        <p>{{totalTime}} from pr opened to merged</p>
+                        <p>{{numAssignments}} people were assigned</p>
+                        <p>{{numMerges}} merges from master</p>
+                        {{#if timeToMerge}}
+                            <p>{{timeToMerge}} from WIP removal until merged</p>
+                        {{/if}}
+                    </td>
+                </tr>
+                {{#if labels.length}}
+                    {{#each labels}}
+                        <tr>
+                            <td>
+                                <svg class="icon {{action}}">
+                                    <use xlink:href="#circled-plus"></use>
+                                </svg>
+                                <span class="label" style="color:#{{textColor}};background:#{{color}};">
+                                    {{text}}
+                                </span>
+                                <span class="duration">
+                                    {{duration}}
+                                </span>
+                            </td>
+                            <td>
+                                <img class="avatar" src="{{user.avatar_url}}"/>
+                                <div class="login">{{user.login}}</div>
+                            </td>
+                        </tr>
+                    {{/each}}
+                {{else}}
+                    <td colspan="2">
+                        There are no label events for this branch yet.
+                    </td>
+                {{/if}}
+            {{/each}}
+        {{else}}
+            <td> There are no pull requests yet for this Sprint. </td>
+        {{/if}}
     </table>
 </div>

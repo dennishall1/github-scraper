@@ -24,7 +24,7 @@ module.exports = function (router) {
             data = fs.readFileSync(path.join(__dirname, '../../prs-' + sprint + '.json'), 'utf8');
         }catch(e){}
 
-        if(data){
+        if(!req.query.refresh && data){
 
             res.set('content-type', 'application/json');
             res.send(data);
@@ -135,7 +135,7 @@ module.exports = function (router) {
                 // render the response
                 function (cb) {
                     console.log(prs);
-                    fs.writeFileSync(path.join(__dirname, '../../prs.json'), JSON.stringify(prs));
+                    fs.writeFileSync(path.join(__dirname, '../../prs-' + sprint + '.json'), JSON.stringify(prs));
                     res.set('content-type', 'application/json');
                     res.send(prs);
                     cb();
