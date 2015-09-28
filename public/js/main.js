@@ -66,7 +66,7 @@
                             }
                         }
                     });
-                    if (pr.mergedAt) {
+                    if (lastWIPRemoval && pr.mergedAt) {
                         pr.timeToMerge = timeSince(new Date(lastWIPRemoval), new Date(pr.mergedAt));
                     }
                     pr.totalTime = timeSince(new Date(pr.createdAt), new Date(pr.mergedAt || pr.closedAt));
@@ -124,7 +124,7 @@
     function timeSince(from, to) {
         to = to || new Date();
         var seconds = Math.floor((to - from) / 1000);
-        var units = ["year", "month", "day", "hour", "minute", "seconds"];
+        var units = ["year", "month", "day", "hour", "minute", "second"];
         var measures = [31536000, 2592000, 86400, 3600, 60, 1];
         for (var i = 0; i < units.length; i++) {
             var measurement = seconds / measures[i];
