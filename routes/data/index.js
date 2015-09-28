@@ -6,6 +6,18 @@ var async = require('async');
 var $$ = require('cheerio');
 require('colors');
 
+xhr = xhr.defaults({
+    jar: true,
+    headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.99 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Referer': 'https://github.com/',
+        'Origin': 'https://github.com',
+        'Host': 'github.com',
+        'Accept-Language': 'en-US,en;q=0.8'
+    }
+});
+
 module.exports = function (router) {
 
     var authenticity_token = '';
@@ -24,7 +36,7 @@ module.exports = function (router) {
             data = fs.readFileSync(path.join(__dirname, '../../prs-' + sprint + '.json'), 'utf8');
         }catch(e){}
 
-        if(!req.query.refresh && data){
+        if(false && !req.query.refresh && data){
 
             res.set('content-type', 'application/json');
             res.send(data);
@@ -34,24 +46,26 @@ module.exports = function (router) {
             async.series([
                 // get the authenticity_token
                 function (cb) {
-                    xhr('https://github.com/login', {jar: true}, function (err, resp, body) {
+                    xhr('https://github.com/login', function (err, resp, body) {
                         credentials.authenticity_token = $$(body).find('input[name="authenticity_token"]').val();
                         console.log("\n\ngithub login page\n\n".green, credentials.authenticity_token);
+                        fs.writeFileSync(path.join(__dirname, '../../scraped-html/login.html'), body);
                         cb();
                     });
                 },
                 // log in
                 function (cb) {
-                    xhr.post('https://github.com/session', {form: credentials, jar: true}, function (err, resp, body) {
+                    xhr.post('https://github.com/session', {form: credentials}, function (err, resp, body) {
                         console.log("\n\ngithub .. logged in \n\n".green, $$(body).find('title').text());
+                        fs.writeFileSync(path.join(__dirname, '../../scraped-html/session.html'), body);
                         cb();
                     });
                 },
                 // get stats...
                 function (cb) {
-                    xhr('https://github.com/CarMax/carmax.com/pulls?q=is%3Apr+milestone%3A"Build+Sprint+' + sprint + '"', {jar: true}, function (err, resp, body) {
+                    xhr('https://github.com/CarMax/carmax.com/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A%22RF+Build+Sprint+' + sprint + '%22', function (err, resp, body) {
 
-                        //fs.writeFileSync(path.join(__dirname, '../../scraped-html/sprint' + sprint + '-prs.html'), body);
+                        fs.writeFileSync(path.join(__dirname, '../../scraped-html/sprint' + sprint + '-prs.html'), body);
 
                         $$(body).find('.issue-title-link').each(function (i, el) {
                             prs.push($$(el).attr('href'));
