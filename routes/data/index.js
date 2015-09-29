@@ -33,7 +33,7 @@ module.exports = function (router) {
             data = fs.readFileSync(path.join(__dirname, '../../prs-' + sprint + '.json'), 'utf8');
         }catch(e){}
 
-        if(false && !req.query.refresh && data){
+        if(!req.query.refresh && data){
 
             res.set('content-type', 'application/json');
             res.send(data);
@@ -46,7 +46,7 @@ module.exports = function (router) {
                     xhr('https://github.com/login', function (err, resp, body) {
                         credentials.authenticity_token = $$(body).find('input[name="authenticity_token"]').val();
                         console.log("\n\ngithub login page\n\n".green, credentials.authenticity_token);
-                        fs.writeFileSync(path.join(__dirname, '../../scraped-html/login.html'), body);
+                        //fs.writeFileSync(path.join(__dirname, '../../scraped-html/login.html'), body);
                         cb();
                     });
                 },
@@ -54,7 +54,7 @@ module.exports = function (router) {
                 function (cb) {
                     xhr.post('https://github.com/session', {form: credentials}, function (err, resp, body) {
                         console.log("\n\ngithub .. logged in \n\n".green, $$(body).find('title').text());
-                        fs.writeFileSync(path.join(__dirname, '../../scraped-html/session.html'), body);
+                        //fs.writeFileSync(path.join(__dirname, '../../scraped-html/session.html'), body);
                         cb();
                     });
                 },
@@ -62,7 +62,7 @@ module.exports = function (router) {
                 function (cb) {
                     xhr('https://github.com/CarMax/carmax.com/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A%22RF+Build+Sprint+' + sprint + '%22', function (err, resp, body) {
 
-                        fs.writeFileSync(path.join(__dirname, '../../scraped-html/sprint' + sprint + '-prs.html'), body);
+                        //fs.writeFileSync(path.join(__dirname, '../../scraped-html/sprint' + sprint + '-prs.html'), body);
 
                         $$(body).find('.issue-title-link').each(function (i, el) {
                             prs.push($$(el).attr('href'));
